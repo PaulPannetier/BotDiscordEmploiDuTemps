@@ -103,7 +103,7 @@ namespace BGLeopold
             EDTWeekData edt = EDTWeekData.Load("lastEDT.json");
             string imagePath = string.Empty;
 
-            if (ReferenceEquals(edt, null) || edt != lastEDTSend || true)
+            if (ReferenceEquals(edt, null) || edt != lastEDTSend)
             {
                 imagePath = lastEDTSend.GenerateImage();
                 await SendImage(imagePath);
@@ -149,7 +149,7 @@ namespace BGLeopold
         {
             //await edtChanel.SendMessageAsync("Announcement!");
             FileAttachment file = new FileAttachment(path);
-            await privateChannel.SendFileAsync(file);
+            await edtChanel.SendFileAsync(file);
 
             await Task.Delay(100);
         }
