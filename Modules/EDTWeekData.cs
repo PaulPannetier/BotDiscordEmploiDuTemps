@@ -142,11 +142,14 @@ namespace BGLeopold
             int year = s.Substring(0, 4).ToInt();
             int month = s.Substring(4, 2).ToInt();
             int day = s.Substring(6, 2).ToInt();
-            int hour = s.Substring(9, 2).ToInt() + 1;
+            int hour = s.Substring(9, 2).ToInt();//+ 1;
             int min = s.Substring(11, 2).ToInt();
             int sec = s.Substring(13, 2).ToInt();
 
-            return new Date(year, month, day, hour, min, sec);
+            TimeZone localZone = TimeZone.CurrentTimeZone;
+            DateTime localTime = localZone.ToLocalTime(new DateTime(year, month, day, hour, min, sec));
+
+            return new Date(localTime.Year, localTime.Month, localTime.Day, localTime.Hour, localTime.Minute, localTime.Second);
         }
 
         #region GenerateStringsModules
@@ -472,6 +475,7 @@ namespace BGLeopold
             {
                 return a.year == b.year && a.month == b.month && a.day == b.day && a.hour == b.hour && a.min == b.min && a.sec == b.sec;
             }
+
             public static bool operator !=(Date a, Date b) => !(a == b);
         }
     }

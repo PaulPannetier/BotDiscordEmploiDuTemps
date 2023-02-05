@@ -18,7 +18,7 @@ namespace BGLeopold
         private CommandService commands;
         private const string botToken = "";//enter ther token here
         private const ulong channelId = 886903917076688916;
-        private const ulong privateChannelId = 1027676957929914478;
+        private const ulong privateChannelId = 1071852578054357033;
         private IMessageChannel edtChanel;
         private IMessageChannel privateChannel;
         private IServiceProvider services;
@@ -96,14 +96,14 @@ namespace BGLeopold
                 await SendImage(path);
             }
 
-
             int weekOffset, oldWeekOffset = CalculateWeekOffset();
-            string edtData = await GetEDTDataWeekAsync(URLData.urlsPerWeek[oldWeekOffset]);
+            //string edtData = await GetEDTDataWeekAsync(URLData.urlsPerWeek[oldWeekOffset]);
+            string edtData = await GetEDTDataWeekAsync(URLData.urlsPerWeek[27]);
             lastEDTSend = EDTWeekData.ParseICSStringToEDTWeekData(edtData);
             EDTWeekData edt = EDTWeekData.Load("lastEDT.json");
             string imagePath = string.Empty;
 
-            if (ReferenceEquals(edt, null) || edt != lastEDTSend)
+            if (ReferenceEquals(edt, null) || edt != lastEDTSend || true)
             {
                 imagePath = lastEDTSend.GenerateImage();
                 await SendImage(imagePath);
@@ -149,7 +149,7 @@ namespace BGLeopold
         {
             //await edtChanel.SendMessageAsync("Announcement!");
             FileAttachment file = new FileAttachment(path);
-            await edtChanel.SendFileAsync(file);
+            await privateChannel.SendFileAsync(file);
 
             await Task.Delay(100);
         }
