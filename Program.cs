@@ -26,7 +26,7 @@ namespace BGLeopold
         private static HttpClient httpClient;
 
         //Param
-        private float hourBeforeSendindEDT = 6f;
+        private float hourBeforeSendindEDT = 48f;
 
         static void Main(string[] args)
         {
@@ -74,7 +74,7 @@ namespace BGLeopold
         private int CalculateWeekOffset()
         {
             TimeSpan delta = DateTime.Now - new DateTime(2022, 9, 12, 0, 0, 0);//première semaine de l'année
-            return Math.Max(0, (int)Math.Floor((delta.TotalHours + hourBeforeSendindEDT * ((int)(delta.TotalHours/168f))) / 168f));//168 = 24 * 7
+            return (int)Math.Floor((delta.TotalDays + hourBeforeSendindEDT / 24f) / 7f);
         }
 
         private async Task ClientReady()
@@ -97,8 +97,7 @@ namespace BGLeopold
             }
 
             int weekOffset, oldWeekOffset = CalculateWeekOffset();
-            //string edtData = await GetEDTDataWeekAsync(URLData.urlsPerWeek[oldWeekOffset]);
-            string edtData = await GetEDTDataWeekAsync(URLData.urlsPerWeek[27]);
+            string edtData = await GetEDTDataWeekAsync(URLData.urlsPerWeek[oldWeekOffset]);
             lastEDTSend = EDTWeekData.ParseICSStringToEDTWeekData(edtData);
             EDTWeekData edt = EDTWeekData.Load("lastEDT.json");
             string imagePath = string.Empty;
