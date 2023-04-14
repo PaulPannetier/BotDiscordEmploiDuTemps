@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Text;
 
 namespace BGLeopold
 {
@@ -680,9 +681,20 @@ namespace BGLeopold
             return newMot;
         }
 
+        private static string RemoveSpace(string s)
+        {
+            string res = s;
+            while (res[0] == ' ')
+            {
+                res = res.Remove(0, 1);
+            }
+            return res;
+        }
+
         public static int ToInt(this string number)
         {
             int nb = 0;
+            number = RemoveSpace(number);
             number = Troncate(number);
             for (int i = number.Length - 1; i >= 0; i--)
             {
@@ -738,6 +750,90 @@ namespace BGLeopold
                 }
             }
             return result;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="s">la chaine de char ou l'on extrait les données</param>
+        /// <param name="startPattern">Le pattern de début d'extraction de données</param>
+        /// <param name="endPattern">Le pattern de fin d'extraction de données</param>
+        /// <returns>L'ensemble des string entre le début de pattern et le fin de pattern</returns>
+        public static List<string> GetSubstringsBetweenPatterns(this string s, string startPattern, string endPattern)
+        {
+            List<string> res = new List<string>();
+
+            char c;
+            bool detectModule = false;
+            int indexBeg = 0, indexEnd = 0;
+            StringBuilder currentModule = new StringBuilder();
+
+            for (int i = 0; i < s.Length; i++)
+            {
+                c = s[i];
+                if (detectModule)
+                {
+                    if (c == startPattern[indexBeg])
+                    {
+                        if (indexBeg >= startPattern.Length - 1)
+                        {
+                            currentModule.Clear();
+                            indexBeg = 0;
+                        }
+                        else
+                        {
+                            indexBeg++;
+                        }
+                    }
+                    else
+                    {
+                        indexBeg = 0;
+                    }
+                    if (c == endPattern[indexEnd])
+                    {
+                        if (indexEnd >= endPattern.Length - 1)
+                        {
+                            string tmp = currentModule.ToString();
+                            tmp = tmp.Remove(tmp.Length - endPattern.Length + 1, endPattern.Length - 1);
+                            res.Add(tmp);
+                            currentModule.Clear();
+                            detectModule = false;
+                            indexEnd = 0;
+                            continue;
+                        }
+                        else
+                        {
+                            indexEnd++;
+                        }
+                    }
+                    else
+                    {
+                        indexEnd = 0;
+                    }
+
+                    currentModule.Append(c);
+                }
+                else
+                {
+                    if (c == startPattern[indexBeg])
+                    {
+                        if (indexBeg >= startPattern.Length - 1)
+                        {
+                            detectModule = true;
+                            indexBeg = 0;
+                        }
+                        else
+                        {
+                            indexBeg++;
+                        }
+                    }
+                    else
+                    {
+                        indexBeg = 0;
+                    }
+                }
+            }
+            return res;
         }
 
         #region SumList

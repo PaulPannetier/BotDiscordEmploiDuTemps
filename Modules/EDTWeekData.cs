@@ -17,7 +17,7 @@ namespace BGLeopold
 
         public static EDTWeekData ParseICSStringToEDTWeekData(string s)
         {
-            List<string> modulesStrings = GetSubstringsBetweenPatterns(s, "BEGIN:VEVENT", "END:VEVENT");
+            List<string> modulesStrings = s.GetSubstringsBetweenPatterns("BEGIN:VEVENT", "END:VEVENT");
 
             List<EDTModule> modules = new List<EDTModule>();
             foreach (string moduleStr in modulesStrings)
@@ -65,17 +65,17 @@ namespace BGLeopold
 
         private static EDTModule GenerateEDTModuleFromString(string s)
         {
-            string name = GetSubstringsBetweenPatterns(s, "SUMMARY:", "\r\n").FirstOrDefault();
+            string name = s.GetSubstringsBetweenPatterns("SUMMARY:", "\r\n").FirstOrDefault();
             name = name == null || name == string.Empty ? string.Empty : RemoveDoubleBackslash(name).Replace("\\n", "").Replace("\n", "");
-            string salle = GetSubstringsBetweenPatterns(s, "LOCATION:", "\r\n").FirstOrDefault();
+            string salle = s.GetSubstringsBetweenPatterns("LOCATION:", "\r\n").FirstOrDefault();
             salle = salle == null || salle == string.Empty ? string.Empty : RemoveDoubleBackslash(salle).Replace("\\n", "").Replace("\n", "");
-            string info = GetSubstringsBetweenPatterns(s, "DESCRIPTION:", "\r\n").FirstOrDefault();
+            string info = s.GetSubstringsBetweenPatterns("DESCRIPTION:", "\r\n").FirstOrDefault();
             info = info == null || info == string.Empty ? string.Empty : RemoveUselessDataInModuleInfo(info);
 
-            string dateInfo = GetSubstringsBetweenPatterns(s, "DTSTART:", "\r\n").FirstOrDefault();
+            string dateInfo = s.GetSubstringsBetweenPatterns("DTSTART:", "\r\n").FirstOrDefault();
             Date begDate = GenerateDateFromICSString(dateInfo);
 
-            dateInfo = GetSubstringsBetweenPatterns(s, "DTEND:", "\r\n").FirstOrDefault();
+            dateInfo = s.GetSubstringsBetweenPatterns("DTEND:", "\r\n").FirstOrDefault();
             Date endDate = GenerateDateFromICSString(dateInfo);
 
             return new EDTModule(name, begDate, endDate, salle, info);
@@ -151,94 +151,6 @@ namespace BGLeopold
 
             return new Date(localTime.Year, localTime.Month, localTime.Day, localTime.Hour, localTime.Minute, localTime.Second);
         }
-
-        #region GenerateStringsModules
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="s">la chaine de char ou l'on extrait les données</param>
-        /// <param name="startPattern">Le pattern de début d'extraction de données</param>
-        /// <param name="endPattern">Le pattern de fin d'extraction de données</param>
-        /// <returns>L'ensemble des string entre le début de pattern et le fin de pattern</returns>
-        private static List<string> GetSubstringsBetweenPatterns(string s, string startPattern, string endPattern)
-        {
-            List<string> res = new List<string>();
-
-            char c;
-            bool detectModule = false;
-            int indexBeg = 0, indexEnd = 0;
-            StringBuilder currentModule = new StringBuilder();
-
-            for (int i = 0; i < s.Length; i++)
-            {
-                c = s[i];
-                if(detectModule)
-                {
-                    if (c == startPattern[indexBeg])
-                    {
-                        if (indexBeg >= startPattern.Length - 1)
-                        {
-                            currentModule.Clear();
-                            indexBeg = 0;
-                        }
-                        else
-                        {
-                            indexBeg++;
-                        }
-                    }
-                    else
-                    {
-                        indexBeg = 0;
-                    }
-                    if (c == endPattern[indexEnd])
-                    {
-                        if (indexEnd >= endPattern.Length - 1)
-                        {
-                            string tmp = currentModule.ToString();
-                            tmp = tmp.Remove(tmp.Length - endPattern.Length + 1, endPattern.Length - 1);
-                            res.Add(tmp);
-                            currentModule.Clear();
-                            detectModule = false;
-                            indexEnd = 0;
-                            continue;
-                        }
-                        else
-                        {
-                            indexEnd++;
-                        }
-                    }
-                    else
-                    {
-                        indexEnd = 0;
-                    }
-
-                    currentModule.Append(c);
-                }
-                else
-                {
-                    if(c == startPattern[indexBeg])
-                    {
-                        if (indexBeg >= startPattern.Length - 1)
-                        {
-                            detectModule = true;
-                            indexBeg = 0;
-                        }
-                        else
-                        {
-                            indexBeg++;
-                        }
-                    }
-                    else
-                    {
-                        indexBeg = 0;
-                    }
-                }
-            }
-            return res;
-        }
-
-        #endregion
 
         private class ModuleComparer : IComparer<EDTModule>
         {

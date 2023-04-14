@@ -9,6 +9,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 //API
 using System.Net.Http;
+using System.Linq;
 
 namespace BGLeopold
 {
@@ -42,6 +43,7 @@ namespace BGLeopold
             client = new DiscordSocketClient(new DiscordSocketConfig
             {
                 //LogLevel = LogSeverity.Debug
+                GatewayIntents = GatewayIntents.AllUnprivileged | GatewayIntents.MessageContent
             });
             commands = new CommandService();
             //services = new ServiceCollection().AddSingleton(client).AddSingleton(commands).BuildServiceProvider();
@@ -111,7 +113,7 @@ namespace BGLeopold
 
             while (true)
             {
-                await Task.Delay(300000);//attendre 5 min
+                await Task.Delay(300000);//wait 5 min
 
                 weekOffset = CalculateWeekOffset();
                 edtData = await GetEDTDataWeekAsync(URLData.urlsPerWeek[weekOffset]);//.GetAwaiter().GetResult();//NE PAS OUBLIER LE @!!!!!
@@ -121,7 +123,7 @@ namespace BGLeopold
                 //si on change de semaine
                 if(weekOffset > oldWeekOffset)
                 {
-                    //TODO : Generate image and send EDT to the disord's server
+                    //Generate image and send EDT to the disord's server
                     imagePath = edt.GenerateImage();
                     await SendImage(imagePath);
                     edt.Save("lastEDT.json");
@@ -146,9 +148,9 @@ namespace BGLeopold
 
         private async Task SendImage(string path)
         {
-            //await edtChanel.SendMessageAsync("Announcement!");
             FileAttachment file = new FileAttachment(path);
             await edtChanel.SendFileAsync(file);
+            //await privateChannel.SendFileAsync(file);
 
             await Task.Delay(100);
         }
@@ -164,20 +166,60 @@ namespace BGLeopold
             return @"" + data;
         }
 
+        private async Task SendEDT(int weekOffset)
+        {
+            string edtData = await GetEDTDataWeekAsync(URLData.urlsPerWeek[weekOffset]);//.GetAwaiter().GetResult();//NE PAS OUBLIER LE @!!!!!
+            EDTWeekData edt = EDTWeekData.ParseICSStringToEDTWeekData(edtData);
+            string imagePath = edt.GenerateImage();
+            await SendImage(imagePath);
+        }
+
         private async Task HandleChannelMessageAsync(SocketMessage arg)
         {
             SocketUserMessage message = (SocketUserMessage)arg;
-            if (message == null || message.Author.IsBot)
+            if (message == null || message.Author.IsBot || (message.Channel.Id != channelId && message.Channel.Id != privateChannelId))
                 return;
 
-            return;
-            Print("Content : " + message.ToString());
-            Print("Create at : " + message.CreatedAt);
-            Print("Channel : " + message.Channel);
-            Print("Author : " + message.Author);
-            Print("Author is bot : " + message.Author.IsBot);
-            /*
+            string textMessage = message.ToString();
+            if(textMessage.StartsWith("!getEDT"))
+            {
+                int offset = CalculateWeekOffset();
+                string tmp = textMessage.GetSubstringsBetweenPatterns("week:", ";").FirstOrDefault();
+                if(tmp != default(string))
+                {
+                    if (tmp.Contains(".."))
+                    {
+                        int start, end;
+                        string startStr = tmp[0].ToString() + tmp.GetSubstringsBetweenPatterns(tmp[0].ToString(), "..").FirstOrDefault();
+                        string endStr = tmp.GetSubstringsBetweenPatterns("..", tmp[tmp.Length -1].ToString()).FirstOrDefault() + tmp[tmp.Length - 1].ToString();
+                        if(startStr == default(string) || endStr == default(string))
+                        {
+                            start = end = 0;
+                        }
+                        else
+                        {
+                            start = startStr.ToInt();
+                            end = endStr.ToInt();
+                            if(start > end)
+                            {
+                                start = end = 0;
+                            }
+                        }
 
+                        for (int i = start; i <= end; i++)
+                        {
+                            await SendEDT(i + offset);
+                        }
+                    }
+                    else
+                    {
+                        int week = tmp.ToInt();
+                        await SendEDT(week + offset);
+                    }
+                }
+            }
+
+            /*
             var context = new SocketCommandContext(client, message);
 
             Print("Message : " + message.ToString());
