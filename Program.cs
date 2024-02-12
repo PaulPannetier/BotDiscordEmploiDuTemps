@@ -17,7 +17,7 @@ namespace BGLeopold
     {
         private DiscordSocketClient client;
         private CommandService commands;
-        private const string botToken = "";//enter ther token here
+        private const string botToken = "MTAxNzc3OTE2ODQ1NDM5Nzk2Mw.G0a08D.AAH4bcqGd1p_c1FnPWL1pD2qWW7YNScssyxbFg";//enter ther token here
         private const ulong channelId = 886903917076688916;
         private const ulong privateChannelId = 1071852578054357033;
         private IMessageChannel edtChanel;
